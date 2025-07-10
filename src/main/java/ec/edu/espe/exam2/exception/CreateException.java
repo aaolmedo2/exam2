@@ -5,10 +5,15 @@ public class CreateException extends RuntimeException {
     private final String entityName;
 
     public CreateException(String entityName, String message) {
-
         super(message);
         this.errorCode = 2;
         this.entityName = entityName;
+    }
+
+    public CreateException(String message) {
+        super(message);
+        this.errorCode = 2;
+        this.entityName = "Unknown";
     }
 
     @Override

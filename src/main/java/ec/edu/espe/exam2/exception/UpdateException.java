@@ -11,6 +11,12 @@ public class UpdateException extends RuntimeException {
         this.entityName = entityName;
     }
 
+    public UpdateException(String message) {
+        super(message);
+        this.errorCode = 3;
+        this.entityName = "Unknown";
+    }
+
     @Override
     public String getMessage() {
         return "Error Code: " + errorCode + "; Entity Name: " + entityName + "; Message: " + super.getMessage();

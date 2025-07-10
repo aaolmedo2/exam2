@@ -5,10 +5,15 @@ public class EntityNotFoundException extends RuntimeException {
     private final String entityName;
 
     public EntityNotFoundException(String entityName, String message) {
-
         super(message);
         this.errorCode = 1;
         this.entityName = entityName;
+    }
+
+    public EntityNotFoundException(String message) {
+        super(message);
+        this.errorCode = 1;
+        this.entityName = "Unknown";
     }
 
     @Override
