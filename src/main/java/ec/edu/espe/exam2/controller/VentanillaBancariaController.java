@@ -105,8 +105,9 @@ public class VentanillaBancariaController {
             @Parameter(description = "Datos de la transacción con denominaciones recibidas/entregadas", required = true) @Valid @RequestBody ProcesarTransaccionDto procesarTransaccionDto) {
 
         try {
-            log.info("Solicitud para procesar transacción {} en turno: {}",
-                    procesarTransaccionDto.getTipoTransaccion(), procesarTransaccionDto.getCodigoTurno());
+            log.info("Solicitud para procesar transacción {} en caja: {} y cajero: {}",
+                    procesarTransaccionDto.getTipoTransaccion(), procesarTransaccionDto.getCodigoCaja(),
+                    procesarTransaccionDto.getCodigoCajero());
             ResponseDto<TransaccionTurnoDto> response = ventanillaBancariaService
                     .procesarTransaccion(procesarTransaccionDto);
             return ResponseEntity.ok(response);

@@ -102,4 +102,20 @@ public class ValidacionService {
 
         return true;
     }
+
+    public boolean validarTipoTransaccion(String tipoTransaccion) {
+        if (tipoTransaccion == null || tipoTransaccion.trim().isEmpty()) {
+            log.warn("Tipo de transacción vacío o nulo");
+            return false;
+        }
+
+        List<String> tiposValidos = Arrays.asList("INICIO", "DEPOSITO", "RETIRO", "CIERRE");
+        boolean esValido = tiposValidos.contains(tipoTransaccion.toUpperCase());
+
+        if (!esValido) {
+            log.warn("Tipo de transacción inválido: {}. Valores válidos: {}", tipoTransaccion, tiposValidos);
+        }
+
+        return esValido;
+    }
 }

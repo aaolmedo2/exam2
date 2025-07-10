@@ -35,12 +35,11 @@ public class VentanillaBancariaService {
 
             // Crear transacción de inicio
             ProcesarTransaccionDto transaccionInicio = new ProcesarTransaccionDto();
-            transaccionInicio.setCodigoTurno(turno.getCodigoTurno());
             transaccionInicio.setTipoTransaccion("INICIO");
             transaccionInicio.setDenominaciones(iniciarTurnoDto.getDenominacionesIniciales());
             transaccionInicio.setMontoTotal(iniciarTurnoDto.getMontoInicial());
 
-            transaccionTurnoService.procesarTransaccion(transaccionInicio);
+            transaccionTurnoService.procesarTransaccion(transaccionInicio, turno.getCodigoTurno());
 
             log.info("Turno iniciado exitosamente: {}", turno.getCodigoTurno());
             return ResponseDto.success("Turno iniciado exitosamente", turno);
@@ -54,10 +53,32 @@ public class VentanillaBancariaService {
     public ResponseDto<TransaccionTurnoDto> procesarTransaccion(ProcesarTransaccionDto procesarTransaccionDto)
             throws CreateException, EntityNotFoundException {
         try {
-            log.info("Procesando transacción tipo: {} para turno: {}",
-                    procesarTransaccionDto.getTipoTransaccion(), procesarTransaccionDto.getCodigoTurno());
+            log.info("Procesando transacción tipo: {} para caja: {} y cajero: {}",
+                    procesarTransaccionDto.getTipoTransaccion(),
+                    procesarTransaccionDto.getCodigoCaja(),
+                    procesarTransaccionDto.getCodigoCajero());
 
-            TransaccionTurnoDto transaccion = transaccionTurnoService.procesarTransaccion(procesarTransaccionDto);
+            // Buscar el turno activo para la caja y cajero
+            TurnoCajeroDto turnoActivo = turnoCajeroService.buscarTurnoActivo(
+                    procesarTransaccionDto.getCodigoCaja(),
+                    procesarTransaccionDto.getCodigoCajero());
+
+            if (turnoActivo == null) {
+                throw new EntityNotFoundException("No hay turno activo para la caja " +
+                        procesarTransaccionDto.getCodigoCaja() + " y cajero " +
+                        procesarTransaccionDto.getCodigoCajero());
+            }
+
+            // Crear el DTO completo con el código de turno
+            ProcesarTransaccionDto transaccionCompleta = new ProcesarTransaccionDto();
+            transaccionCompleta.setCodigoCaja(procesarTransaccionDto.getCodigoCaja());
+            transaccionCompleta.setCodigoCajero(procesarTransaccionDto.getCodigoCajero());
+            transaccionCompleta.setTipoTransaccion(procesarTransaccionDto.getTipoTransaccion());
+            transaccionCompleta.setDenominaciones(procesarTransaccionDto.getDenominaciones());
+            transaccionCompleta.setMontoTotal(procesarTransaccionDto.getMontoTotal());
+
+            TransaccionTurnoDto transaccion = transaccionTurnoService.procesarTransaccion(
+                    transaccionCompleta, turnoActivo.getCodigoTurno());
 
             log.info("Transacción procesada exitosamente con ID: {}", transaccion.getId());
             return ResponseDto.success("Transacción procesada exitosamente", transaccion);
@@ -75,12 +96,11 @@ public class VentanillaBancariaService {
 
             // Crear transacción de cierre
             ProcesarTransaccionDto transaccionCierre = new ProcesarTransaccionDto();
-            transaccionCierre.setCodigoTurno(cerrarTurnoDto.getCodigoTurno());
             transaccionCierre.setTipoTransaccion("CIERRE");
             transaccionCierre.setDenominaciones(cerrarTurnoDto.getDenominacionesFinales());
             transaccionCierre.setMontoTotal(cerrarTurnoDto.getMontoFinal());
 
-            transaccionTurnoService.procesarTransaccion(transaccionCierre);
+            transaccionTurnoService.procesarTransaccion(transaccionCierre, cerrarTurnoDto.getCodigoTurno());
 
             // Cerrar turno
             TurnoCajeroDto turno = turnoCajeroService.cerrarTurno(cerrarTurnoDto);

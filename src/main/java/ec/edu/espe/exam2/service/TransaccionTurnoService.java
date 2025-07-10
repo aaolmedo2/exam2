@@ -41,42 +41,37 @@ public class TransaccionTurnoService {
         this.validacionService = validacionService;
     }
 
-    public TransaccionTurnoDto procesarTransaccion(ProcesarTransaccionDto procesarTransaccionDto)
+    public TransaccionTurnoDto procesarTransaccion(ProcesarTransaccionDto procesarTransaccionDto, String codigoTurno)
             throws CreateException, EntityNotFoundException {
         try {
             log.info("Procesando transacción tipo: {} para turno: {}",
-                    procesarTransaccionDto.getTipoTransaccion(), procesarTransaccionDto.getCodigoTurno());
+                    procesarTransaccionDto.getTipoTransaccion(), codigoTurno);
 
             // Validaciones
-            if (!validacionService.validarCodigoTurno(procesarTransaccionDto.getCodigoTurno())) {
-                throw new CreateException("Código de turno inválido");
-            }
-
             if (!validacionService.validarDenominaciones(procesarTransaccionDto.getDenominaciones())) {
                 throw new CreateException("Denominaciones inválidas");
             }
 
-            // Validar que el turno existe y está abierto
-            Optional<TurnoCajero> turnoOpt = turnoCajeroRepository
-                    .findByCodigoTurno(procesarTransaccionDto.getCodigoTurno());
+            if (!validacionService.validarTipoTransaccion(procesarTransaccionDto.getTipoTransaccion())) {
+                throw new CreateException("Tipo de transacción inválido");
+            }
+
+            // Verificar que el turno exista y esté abierto
+            Optional<TurnoCajero> turnoOpt = turnoCajeroRepository.findByCodigoTurno(codigoTurno);
             if (!turnoOpt.isPresent()) {
-                throw new EntityNotFoundException(
-                        "Turno no encontrado con código: " + procesarTransaccionDto.getCodigoTurno());
+                throw new EntityNotFoundException("Turno no encontrado con código: " + codigoTurno);
             }
 
             TurnoCajero turno = turnoOpt.get();
             if (!"ABIERTO".equals(turno.getEstado())) {
-                throw new CreateException("No se puede procesar transacción en un turno cerrado");
+                throw new CreateException("El turno no está abierto");
             }
 
-            // Validar tipo de transacción
-            if (!esTipoTransaccionValido(procesarTransaccionDto.getTipoTransaccion())) {
-                throw new CreateException(
-                        "Tipo de transacción no válido: " + procesarTransaccionDto.getTipoTransaccion());
+            // Calcular monto si no se proporciona
+            Double montoTotal = procesarTransaccionDto.getMontoTotal();
+            if (montoTotal == null) {
+                montoTotal = calcularMontoTotal(procesarTransaccionDto.getDenominaciones());
             }
-
-            // Calcular monto total
-            Double montoTotal = calcularMontoTotal(procesarTransaccionDto.getDenominaciones());
 
             // Ajustar monto según tipo de transacción
             Double montoAjustado = ajustarMontoPorTipo(montoTotal, procesarTransaccionDto.getTipoTransaccion());
@@ -85,7 +80,7 @@ public class TransaccionTurnoService {
             TransaccionTurno transaccion = new TransaccionTurno();
             transaccion.setCodigoCaja(turno.getCodigoCaja());
             transaccion.setCodigoCajero(turno.getCodigoCajero());
-            transaccion.setCodigoTurno(procesarTransaccionDto.getCodigoTurno());
+            transaccion.setCodigoTurno(codigoTurno);
             transaccion.setTipoTransaccion(procesarTransaccionDto.getTipoTransaccion());
             transaccion.setMontoTotal(montoAjustado);
             transaccion.setDenominaciones(denominacionMapper.toEntityList(procesarTransaccionDto.getDenominaciones()));
@@ -93,14 +88,12 @@ public class TransaccionTurnoService {
 
             TransaccionTurno transaccionGuardada = transaccionTurnoRepository.save(transaccion);
 
-            log.info("Transacción procesada exitosamente con monto: ${}", montoAjustado);
+            log.info("Transacción guardada exitosamente con ID: {}", transaccionGuardada.getId());
             return transaccionTurnoMapper.toDto(transaccionGuardada);
 
-        } catch (EntityNotFoundException e) {
-            throw e;
         } catch (Exception e) {
             log.error("Error al procesar transacción: {}", e.getMessage());
-            throw new CreateException("Error al procesar transacción: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -162,13 +155,6 @@ public class TransaccionTurnoService {
         return denominaciones.stream()
                 .mapToDouble(d -> d.getBillete() * d.getCantidad())
                 .sum();
-    }
-
-    private boolean esTipoTransaccionValido(String tipoTransaccion) {
-        return "RETIRO".equals(tipoTransaccion) ||
-                "DEPOSITO".equals(tipoTransaccion) ||
-                "INICIO".equals(tipoTransaccion) ||
-                "CIERRE".equals(tipoTransaccion);
     }
 
     private Double ajustarMontoPorTipo(Double monto, String tipoTransaccion) {

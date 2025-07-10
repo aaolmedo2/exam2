@@ -220,4 +220,22 @@ public class TurnoCajeroService {
 
         return montoTeorico;
     }
+
+    public TurnoCajeroDto buscarTurnoActivo(String codigoCaja, String codigoCajero) throws EntityNotFoundException {
+        log.info("Buscando turno activo para caja: {} y cajero: {}", codigoCaja, codigoCajero);
+
+        List<TurnoCajero> turnosActivos = turnoCajeroRepository.findByCodigoCajaAndCodigoCajeroAndEstado(
+                codigoCaja, codigoCajero, "ABIERTO");
+
+        if (turnosActivos.isEmpty()) {
+            throw new EntityNotFoundException(
+                    "No hay turno activo para la caja " + codigoCaja + " y cajero " + codigoCajero);
+        }
+
+        if (turnosActivos.size() > 1) {
+            log.warn("Se encontraron múltiples turnos activos para caja: {} y cajero: {}", codigoCaja, codigoCajero);
+        }
+
+        return turnoCajeroMapper.toDto(turnosActivos.get(0));
+    }
 }

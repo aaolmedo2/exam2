@@ -10,7 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProcesarTransaccionDto {
-    private String codigoTurno;
+    private String codigoCaja;
+    private String codigoCajero;
     private String tipoTransaccion; // "RETIRO", "DEPOSITO"
     private List<DenominacionDto> denominaciones;
     private Double montoTotal;

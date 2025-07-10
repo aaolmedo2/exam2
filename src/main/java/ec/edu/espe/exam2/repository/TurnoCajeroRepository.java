@@ -16,6 +16,8 @@ public interface TurnoCajeroRepository extends MongoRepository<TurnoCajero, Stri
 
     List<TurnoCajero> findByCodigoCajaAndEstado(String codigoCaja, String estado);
 
+    List<TurnoCajero> findByCodigoCajaAndCodigoCajeroAndEstado(String codigoCaja, String codigoCajero, String estado);
+
     boolean existsByCodigoTurnoAndEstado(String codigoTurno, String estado);
 
     Optional<TurnoCajero> findFirstByCodigoCajeroAndEstado(String codigoCajero, String estado);
