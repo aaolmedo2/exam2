@@ -14,8 +14,8 @@ public class ValidacionService {
 
     private static final List<Integer> DENOMINACIONES_VALIDAS = Arrays.asList(1, 5, 10, 20, 50, 100);
     private static final Pattern CODIGO_CAJA_PATTERN = Pattern.compile("^CAJ\\d{2}$");
-    private static final Pattern CODIGO_CAJERO_PATTERN = Pattern.compile("^USE\\d{2}$");
-    private static final Pattern CODIGO_TURNO_PATTERN = Pattern.compile("^CAJ\\d{2}-USE\\d{2}-\\d{8}$");
+    private static final Pattern CODIGO_CAJERO_PATTERN = Pattern.compile("^USU\\d{2}$");
+    private static final Pattern CODIGO_TURNO_PATTERN = Pattern.compile("^CAJ\\d{2}-USU\\d{2}-\\d{8}$");
 
     public boolean validarDenominaciones(List<DenominacionDto> denominaciones) {
         if (denominaciones == null || denominaciones.isEmpty()) {
@@ -54,7 +54,7 @@ public class ValidacionService {
 
         boolean esValido = CODIGO_CAJERO_PATTERN.matcher(codigoCajero).matches();
         if (!esValido) {
-            log.warn("Código de cajero inválido: {}. Debe seguir el formato USE##", codigoCajero);
+            log.warn("Código de cajero inválido: {}. Debe seguir el formato USU##", codigoCajero);
         }
 
         return esValido;
